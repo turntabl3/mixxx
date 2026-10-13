@@ -64,7 +64,7 @@
    <item row="2" column="1">
     <widget class="QLineEdit" name="lineEditScriptPath">
      <property name="toolTip">
-      <string>Path to tools/stems/separate.py inside the Mixxx source tree.</string>
+      <string>The separation script. It ships with Mixxx, so this only needs changing to run a different one.</string>
      </property>
     </widget>
    </item>
@@ -138,6 +138,17 @@
    </item>
 
    <item row="6" column="0" colspan="3">
+    <widget class="QPushButton" name="pushButtonInstallEnvironment">
+     <property name="toolTip">
+      <string>Creates the Python environment that separation runs in, by downloading demucs and PyTorch. This happens once and takes a few minutes.</string>
+     </property>
+     <property name="text">
+      <string>Install separation environment</string>
+     </property>
+    </widget>
+   </item>
+
+   <item row="7" column="0" colspan="3">
     <spacer>
      <property name="orientation">
       <enum>Qt::Vertical</enum>

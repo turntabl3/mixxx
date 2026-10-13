@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QPointer>
+#include <QThread>
+
 #include "preferences/dialog/dlgpreferencepage.h"
 #include "preferences/dialog/ui_dlgprefstemsdlg.h"
 #include "preferences/stemseparationsettings.h"
@@ -26,6 +29,9 @@ class DlgPrefStems : public DlgPreferencePage, public Ui::DlgPrefStemsDlg {
     void slotBrowsePython();
     void slotBrowseScript();
     void slotBrowseOutputDir();
+    /// Creates the Python environment separation runs in. It downloads PyTorch,
+    /// so it takes minutes and runs on a worker thread.
+    void slotInstallEnvironment();
     /// Named without the QWidget signal argument so it can be connected to
     /// both toggled(bool) and textChanged(const QString&).
     void slotInputChanged();
@@ -34,4 +40,7 @@ class DlgPrefStems : public DlgPreferencePage, public Ui::DlgPrefStemsDlg {
     void updateStatus();
 
     StemSeparationSettings m_settings;
+    /// Non-null while an install is running, so the button cannot start a
+    /// second one.
+    QPointer<QThread> m_pProvisionJob;
 };

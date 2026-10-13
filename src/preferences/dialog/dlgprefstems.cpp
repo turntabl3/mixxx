@@ -5,6 +5,11 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QLineEdit>
+#include <QMessageBox>
+#include <QPointer>
+#include <QThread>
+
+#include "stems/stemprovisionjob.h"
 
 #include "moc_dlgprefstems.cpp"
 
@@ -21,6 +26,16 @@ QString startDirectory(const QString& current) {
         }
     }
     return QDir::homePath();
+}
+
+/// Interpreter used only to bootstrap the environment. Separation never runs
+/// under this one; it runs under the interpreter that comes out of it.
+QString systemInterpreter() {
+#if defined(Q_OS_WIN)
+    return QStringLiteral("python");
+#else
+    return QStringLiteral("python3");
+#endif
 }
 
 } // namespace
@@ -63,6 +78,10 @@ DlgPrefStems::DlgPrefStems(QWidget* parent, UserSettingsPointer pConfig)
             &QPushButton::clicked,
             this,
             &DlgPrefStems::slotBrowseOutputDir);
+    connect(pushButtonInstallEnvironment,
+            &QPushButton::clicked,
+            this,
+            &DlgPrefStems::slotInstallEnvironment);
 
     setScrollSafeGuardForAllInputWidgets(this);
 
@@ -137,16 +156,80 @@ void DlgPrefStems::updateStatus() {
     // Checked here rather than only at separation time: the paths are the two
     // things that are commonly wrong, and finding out from a failed background
     // job after the dialog has closed is worse.
-    for (const QString& path : {pythonPath, scriptPath}) {
-        if (!QFileInfo::exists(path)) {
-            labelStatus->setText(tr("Not found: %1").arg(path));
-            return;
-        }
+    if (!QFileInfo::exists(scriptPath)) {
+        labelStatus->setText(tr("Separation script not found: %1").arg(scriptPath));
+        return;
+    }
+    if (!QFileInfo::exists(pythonPath)) {
+        // The normal state on a fresh installation: the interpreter path is the
+        // default one, but no environment has been created there yet.
+        labelStatus->setText(tr("The separation environment is not installed "
+                                "yet. Use \"Install separation environment\" "
+                                "above, or point the program at an interpreter "
+                                "that has demucs."));
+        return;
     }
 
     labelStatus->setText(tr("Ready. Separating a track runs in the background and "
                             "takes a few times the length of the track, so the deck "
                             "keeps playing the original until it finishes."));
+}
+
+void DlgPrefStems::slotInstallEnvironment() {
+    if (m_pProvisionJob != nullptr) {
+        return;
+    }
+
+    pushButtonInstallEnvironment->setEnabled(false);
+    labelStatus->setText(tr("Installing the separation environment. This "
+                            "downloads PyTorch and takes a few minutes."));
+
+    auto* pJob = new mixxx::StemProvisionJob(nullptr,
+            systemInterpreter(),
+            m_settings.getProvisionScriptPath(),
+            m_settings.getEnvironmentDir());
+    m_pProvisionJob = pJob;
+
+    // The installer prints pip's output, so showing the last line is enough to
+    // tell a download in progress from a stall.
+    connect(pJob,
+            &mixxx::StemProvisionJob::outputLine,
+            this,
+            [this](const QString& line) {
+                labelStatus->setText(line);
+            });
+    connect(pJob,
+            &mixxx::StemProvisionJob::completed,
+            this,
+            [this](const QString& interpreterPath) {
+                // Store the interpreter that was just created. It is normally
+                // the default path already, but writing it explicitly means a
+                // user who had pointed at something else ends up with settings
+                // that match the environment on disk.
+                lineEditPythonPath->setText(interpreterPath);
+                m_settings.setPythonPath(interpreterPath);
+                pushButtonInstallEnvironment->setEnabled(true);
+                updateStatus();
+                QMessageBox::information(this,
+                        tr("Separation Environment Installed"),
+                        tr("%1 is ready. Tracks can now be separated.")
+                                .arg(interpreterPath));
+            });
+    connect(pJob,
+            &mixxx::StemProvisionJob::failed,
+            this,
+            [this](const QString& message) {
+                pushButtonInstallEnvironment->setEnabled(true);
+                updateStatus();
+                QMessageBox::warning(this,
+                        tr("Could Not Install Separation Environment"),
+                        message);
+            });
+    // Neither the job nor its dialog survives the menu that started it, so the
+    // job deletes itself and is not owned by the page.
+    connect(pJob, &QThread::finished, this, [this] { m_pProvisionJob = nullptr; });
+    connect(pJob, &QThread::finished, pJob, &QObject::deleteLater);
+    pJob->start();
 }
 
 void DlgPrefStems::slotBrowsePython() {
