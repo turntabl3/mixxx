@@ -3136,6 +3136,10 @@ bool WTrackMenu::featureIsEnabled(Feature flag) const {
         return true;
     case Feature::FindOnWeb:
         return true;
+    case Feature::Stems:
+        // Separation only needs the track's file, so unlike the other actions
+        // it does not depend on what the track model allows.
+        return true;
     case Feature::Properties:
         return m_pTrackModel->hasCapabilities(TrackModel::Capability::Properties);
     case Feature::SearchRelated:

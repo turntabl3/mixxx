@@ -82,6 +82,7 @@ class WTrackMenu : public QMenu {
             WTrackMenu::Feature::RemoveFromDisk |
             WTrackMenu::Feature::FileBrowser |
             WTrackMenu::Feature::Properties |
+            WTrackMenu::Feature::Stems |
             WTrackMenu::Feature::UpdateReplayGainFromPregain |
             WTrackMenu::Feature::FindOnWeb |
             WTrackMenu::Feature::SelectInLibrary};
