@@ -95,22 +95,24 @@ Done:
 - `StemSeparationSettings` holds interpreter, script, model and output path.
 - A preference page (Preferences > Stems) exposes them, with the paths checked
   as you type rather than only when a separation fails.
+- `mixxx::StemSeparationJob` runs a separation on a worker thread.
+- "Separate stems…" in the track menu, enabled for a single track once the
+  backend is configured. It reports where the container was written.
 
 Still to do:
 
-1. A job that runs `StemSeparator` on a worker thread when the user asks for a
-   track. It must not touch the engine thread; the deck keeps playing the
-   original file while separation runs.
-2. Making the deck load the container. Once a container exists for the loaded
+1. Making the deck load the container. Once a container exists for the loaded
    track it has to be opened instead of the original file, so that
    `SoundSourceSTEM` hands the deck four stereo pairs and the existing per-stem
    controls appear. This needs a track -> container mapping: either a field on
    the track record, or a deterministic cache path derived from the track
    location. A deterministic path is preferable -- it leaves the library
-   untouched and the original file is never replaced.
-3. Waveform. Per-stem waveform rows come from `analyzerwaveform`, which derives
+   untouched and the original file is never replaced. Until then, add the
+   container to the library by hand and load it as a normal track.
+2. Waveform. Per-stem waveform rows come from `analyzerwaveform`, which derives
    the stem count from the channel count. The container therefore has to be
    analysed, not the original, or the waveform shows a single row.
-4. A UI trigger. Nothing in the app invokes a separation yet, so today you run
-   `separate.py` by hand and load the result as an ordinary library track.
+3. Progress and cancellation. The dialog is a busy indicator with no cancel
+   button, because the backend runs as a child process with no cancellation
+   support. A real progress bar would mean parsing demucs' own output.
 
