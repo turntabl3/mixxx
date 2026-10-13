@@ -3,15 +3,14 @@
 
 Runs demucs (https://github.com/facebookresearch/demucs) over the track, then
 muxes main mix + stems into the NI Stems container that Mixxx already knows how
-to play (see tools/stems/stemmp4.py).
+to play (see stemmp4.py).
 
-Needs demucs, which is not a Mixxx build dependency, so point the script at an
-interpreter that has it, e.g.:
+This script ships with Mixxx and runs under an interpreter that has demucs
+installed. Preferences > Stems creates that interpreter for you; to do it by
+hand, or to run this script standalone:
 
-    python3 -m venv ~/.venvs/stems
-    ~/.venvs/stems/bin/pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-    ~/.venvs/stems/bin/pip install demucs numpy soundfile
-    ~/.venvs/stems/bin/python tools/stems/separate.py <track> [out.stem.mp4] [--model NAME]
+    python3 provision.py <environment-dir>
+    <environment-dir>/venv/bin/python separate.py <track> [out.stem.mp4] [--model NAME]
 
 Separation is roughly 0.4x realtime for htdemucs on a 12-core laptop CPU, so a
 three minute track takes a few minutes. That is why stems are produced offline

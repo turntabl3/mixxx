@@ -5,7 +5,7 @@
 
 namespace mixxx {
 
-/// Runs an external separation backend (tools/stems/separate.py) over a track
+/// Runs an external separation backend (res/stems/separate.py) over a track
 /// and returns the path of the produced NI Stems container.
 ///
 /// Separation is slow (roughly 0.4x realtime on a laptop CPU), so callers must
@@ -17,7 +17,7 @@ class StemSeparator {
     struct Settings {
         /// Interpreter that has demucs installed, e.g. ~/.venvs/stems/bin/python.
         QString pythonPath;
-        /// Path to tools/stems/separate.py.
+        /// Path to res/stems/separate.py.
         QString scriptPath;
         /// Directory for the produced container. Empty means "beside the track".
         QString outputDir;

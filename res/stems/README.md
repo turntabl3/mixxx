@@ -54,7 +54,7 @@ is several GB of no use on a machine without an NVIDIA GPU.
 ## Usage
 
 ```sh
-~/.venvs/stems/bin/python tools/stems/separate.py /path/to/track.flac
+<environment>/venv/bin/python separate.py /path/to/track.flac
 # -> /path/to/track.stem.mp4
 ```
 
@@ -89,7 +89,7 @@ yet.
 
 Done:
 
-- `tools/stems/` produces a container Mixxx loads.
+- `res/stems/` produces a container Mixxx loads, and ships with the app.
 - `mixxx::StemSeparator` runs that pipeline and validates the result, and
   passes the configured model through.
 - `StemSeparationSettings` holds interpreter, script, model and output path.
