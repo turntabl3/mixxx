@@ -6,6 +6,7 @@
 #include <QFileInfo>
 
 #include "preferences/usersettings.h"
+#include "util/logger.h"
 
 #define STEM_SEPARATION_CONFIG_KEY "[StemSeparation]"
 
@@ -42,9 +43,7 @@ class StemSeparationSettings {
     // Mixxx's settings directory rather than to an empty string, so the only
     // thing left to do on a fresh installation is to create that environment.
     QString getPythonPath() const {
-        return m_pConfig->getValue<QString>(
-                ConfigKey(STEM_SEPARATION_CONFIG_KEY, STEM_SEPARATION_PYTHON_PATH),
-                getPythonPathDefault());
+        return resolvePath(STEM_SEPARATION_PYTHON_PATH, getPythonPathDefault());
     }
 
     QString getPythonPathDefault() const {
@@ -68,9 +67,7 @@ class StemSeparationSettings {
 
     // The separation script, which ships with the application's resources.
     QString getScriptPath() const {
-        return m_pConfig->getValue<QString>(
-                ConfigKey(STEM_SEPARATION_CONFIG_KEY, STEM_SEPARATION_SCRIPT_PATH),
-                getScriptPathDefault());
+        return resolvePath(STEM_SEPARATION_SCRIPT_PATH, getScriptPathDefault());
     }
 
     QString getScriptPathDefault() const {
@@ -127,5 +124,28 @@ class StemSeparationSettings {
     }
 
   private:
+    // A configured path is only meaningful while it still points at something.
+    // A stored value that has since gone missing is invisible until the
+    // preferences page is opened, and until then it leaves the feature failing
+    // with "not found" even though the bundled default would have worked --
+    // which is exactly what happens when the pipeline is moved, or when the
+    // interpreter lives on a drive that is not mounted right now. Fall back to
+    // the default instead, and let the preferences page show the path actually
+    // in use, so applying the page corrects the stale value.
+    QString resolvePath(const QString& key, const QString& defaultValue) const {
+        const QString stored = m_pConfig->getValue<QString>(
+                ConfigKey(STEM_SEPARATION_CONFIG_KEY, key), QString());
+        if (stored.isEmpty()) {
+            return defaultValue;
+        }
+        if (QFileInfo::exists(stored)) {
+            return stored;
+        }
+        // Deliberately silent: a header cannot log (Mixxx defines kLogger per
+        // translation unit), and the preferences page shows the path actually
+        // in use, so the stale value is visible there.
+        return defaultValue;
+    }
+
     UserSettingsPointer m_pConfig;
 };
