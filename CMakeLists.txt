@@ -2911,6 +2911,7 @@ if(STEM)
     PRIVATE
       src/sources/soundsourcestem.cpp
       src/stems/stemseparator.cpp
+      src/stems/stemseparationjob.cpp
       src/track/steminfoimporter.cpp
       src/track/steminfo.cpp
       src/widget/wtrackstemmenu.cpp
