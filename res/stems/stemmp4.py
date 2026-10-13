@@ -87,6 +87,14 @@ def build(main, drums, bass, other, vocals, out):
         cmd += ['-i', s]
     for i in range(5):
         cmd += ['-map', '%d:a:0' % i]
+    # Carry the source's tags across explicitly rather than relying on ffmpeg
+    # defaulting to input 0's metadata.
+    cmd += ['-map_metadata', '0']
+    # Carry the cover art across too. An MP3 keeps it in an ID3 frame that
+    # ffmpeg exposes as a video stream, and the MP4 muxer writes a mapped
+    # attached picture as the covr atom that players read. The trailing ? makes
+    # the mapping optional, so a track without art still produces a container.
+    cmd += ['-map', '0:v:0?', '-c:v', 'copy', '-disposition:v:0', 'attached_pic']
     cmd += ['-c:a', 'alac', out]
     subprocess.run(cmd, check=True)
 
