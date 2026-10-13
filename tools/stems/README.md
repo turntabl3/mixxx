@@ -84,6 +84,29 @@ references it but never calls it on this path).
 
 ## Status
 
-This is the separation half only. Mixxx does not yet invoke it: there is no
-preference to point at an interpreter, no background job to run separation on
-load, and no cache. Until that exists, run `separate.py` by hand.
+The pipeline and the pieces that drive it are in place; Mixxx does not call it
+yet.
+
+Done:
+
+- `tools/stems/` produces a container Mixxx loads.
+- `mixxx::StemSeparator` runs that pipeline and validates the result.
+- `StemSeparationSettings` holds interpreter, script, model and output path.
+
+Still to do:
+
+1. A preference page (Preferences > Stems) exposing those settings.
+2. A job that runs `StemSeparator` on a worker thread when the user asks for a
+   track. It must not touch the engine thread; the deck keeps playing the
+   original file while separation runs.
+3. Making the deck load the container. Once a container exists for the loaded
+   track it has to be opened instead of the original file, so that
+   `SoundSourceSTEM` hands the deck four stereo pairs and the existing per-stem
+   controls appear. This needs a track -> container mapping: either a field on
+   the track record, or a deterministic cache path derived from the track
+   location. A deterministic path is preferable -- it leaves the library
+   untouched and the original file is never replaced.
+4. Waveform. Per-stem waveform rows come from `analyzerwaveform`, which derives
+   the stem count from the channel count. The container therefore has to be
+   analysed, not the original, or the waveform shows a single row.
+
