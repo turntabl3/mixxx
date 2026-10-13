@@ -5,6 +5,8 @@
 #include <QFileInfo>
 #include <QProcess>
 
+#include "moc_stemprovisionjob.cpp"
+
 namespace mixxx {
 
 namespace {
