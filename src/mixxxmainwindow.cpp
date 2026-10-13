@@ -36,6 +36,10 @@
 #endif
 #include "control/controlindicatortimer.h"
 #include "library/library.h"
+#include "library/trackcollection.h"
+#ifdef __STEM__
+#include "stems/stempreparationjob.h"
+#endif
 #include "library/library_decl.h"
 #include "library/library_prefs.h"
 #ifdef __ENGINEPRIME__
@@ -1001,7 +1005,33 @@ void MixxxMainWindow::connectMenuBar() {
             &mixxx::LibraryExporter::slotRequestExport,
             Qt::UniqueConnection);
 #endif
+
+#ifdef __STEM__
+    connect(m_pMenuBar,
+            &WMainMenuBar::prepareStems,
+            this,
+            &MixxxMainWindow::slotPrepareStems,
+            Qt::UniqueConnection);
+#endif
 }
+
+#ifdef __STEM__
+void MixxxMainWindow::slotPrepareStems() {
+    const auto pLibrary = m_pCoreServices->getLibrary();
+    if (!pLibrary) {
+        return;
+    }
+    // The library's root directories are what "the library" means here. The
+    // work happens on files, before anything is loaded, so enumerating the
+    // track collection is not needed and an unreadable directory cannot break
+    // the run.
+    mixxx::prepareStemsForLibrary(this,
+            pLibrary->trackCollectionManager()
+                    ->internalCollection()
+                    ->getRootDirStrings(),
+            m_pCoreServices->getSettings());
+}
+#endif
 
 /// Enable/disable listening to Alt key press for toggling the menubar.
 #ifndef __APPLE__

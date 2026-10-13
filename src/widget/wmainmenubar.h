@@ -66,6 +66,9 @@ class WMainMenuBar : public QMenuBar {
     void loadTrackToDeck(int deck);
     void reloadSkin();
     void rescanLibrary();
+#ifdef __STEM__
+    void prepareStems();
+#endif
 #ifdef __ENGINEPRIME__
     void exportLibrary();
 #endif

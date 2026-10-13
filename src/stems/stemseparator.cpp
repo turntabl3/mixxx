@@ -79,9 +79,7 @@ bool StemSeparator::separate(const QString& trackPath,
                               .arg(m_settings.outputDir);
             return false;
         }
-        const QString outPath = QDir(m_settings.outputDir).filePath(
-                QFileInfo(trackPath).completeBaseName() + QStringLiteral(".stem.mp4"));
-        args.append(outPath);
+        args.append(containerPathFor(trackPath, m_settings));
     }
     if (!m_settings.model.isEmpty()) {
         // separate.py takes --model so the position of the output path does not
@@ -138,6 +136,25 @@ bool StemSeparator::separate(const QString& trackPath,
     kLogger.info() << "separated" << trackPath << "into" << absoluteOutputPath;
     *pOutputPath = absoluteOutputPath;
     return true;
+}
+
+QString StemSeparator::containerPathFor(const QString& trackPath, const Settings& settings) {
+    const QString name = QFileInfo(trackPath).completeBaseName() +
+            QStringLiteral(".stem.mp4");
+    if (settings.outputDir.isEmpty()) {
+        // The backend defaults to writing beside the track.
+        return QFileInfo(trackPath).dir().filePath(name);
+    }
+    return QDir(settings.outputDir).filePath(name);
+}
+
+bool StemSeparator::hasContainer(const QString& trackPath) const {
+    // A container is not separated again: completeBaseName() would turn
+    // "song.stem.mp4" into "song.stem.stem.mp4", which is never what is meant.
+    if (trackPath.endsWith(QStringLiteral(".stem.mp4"), Qt::CaseInsensitive)) {
+        return true;
+    }
+    return QFileInfo::exists(containerPathFor(trackPath, m_settings));
 }
 
 } // namespace mixxx

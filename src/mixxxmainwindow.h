@@ -91,6 +91,10 @@ class MixxxMainWindow : public QMainWindow {
 
   private slots:
     void slotTooltipModeChanged(mixxx::preferences::Tooltips tt);
+#ifdef __STEM__
+    /// Creates stems for every track in the library that does not have them.
+    void slotPrepareStems();
+#endif
 
   signals:
     void skinLoaded();

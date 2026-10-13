@@ -2923,6 +2923,7 @@ if(STEM)
       src/stems/stemseparator.cpp
       src/stems/stemseparationjob.cpp
       src/stems/stemprovisionjob.cpp
+      src/stems/stempreparationjob.cpp
       src/track/steminfoimporter.cpp
       src/track/steminfo.cpp
       src/widget/wtrackstemmenu.cpp

@@ -179,6 +179,23 @@ void WMainMenuBar::initialize() {
     pLibraryMenu->addAction(pLibraryExport);
 #endif
 
+#ifdef __STEM__
+    QString prepareStemsTitle = tr("&Prepare Stems for Library");
+    QString prepareStemsText =
+            tr("Creates stems for every track in the library that does not "
+               "have them yet.");
+    auto* pLibraryPrepareStems = new QAction(prepareStemsTitle, this);
+    pLibraryPrepareStems->setStatusTip(prepareStemsText);
+    pLibraryPrepareStems->setWhatsThis(
+            buildWhatsThis(prepareStemsTitle, prepareStemsText));
+    pLibraryPrepareStems->setCheckable(false);
+    connect(pLibraryPrepareStems,
+            &QAction::triggered,
+            this,
+            &WMainMenuBar::prepareStems);
+    pLibraryMenu->addAction(pLibraryPrepareStems);
+#endif
+
     pLibraryMenu->addSeparator();
 
     QString searchHereTitle = tr("Search in Current View...");

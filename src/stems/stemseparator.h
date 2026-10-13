@@ -38,6 +38,15 @@ class StemSeparator {
             QString* pOutputPath,
             QString* pError) const;
 
+    /// Where the container for a track is expected to be. Mirrors the naming
+    /// the backend applies, so callers can tell whether a track has already
+    /// been separated without running anything.
+    static QString containerPathFor(const QString& trackPath, const Settings& settings);
+
+    /// True when there is already a container for this track. A track that is
+    /// itself a container counts, so containers are never separated again.
+    bool hasContainer(const QString& trackPath) const;
+
   private:
     Settings m_settings;
 };
