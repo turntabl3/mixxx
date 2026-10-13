@@ -2616,15 +2616,10 @@ if(NOT ANDROID)
     DESTINATION "${MIXXX_INSTALL_DATADIR}"
   )
 
-  # Stem separation pipeline. It runs as an external process rather than being
-  # linked in, so the script has to be shipped next to the other resources.
-  install(
-    DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/res/stems"
-    DESTINATION "${MIXXX_INSTALL_DATADIR}"
-    FILES_MATCHING
-    PATTERN "*.py"
-    PATTERN "*.md"
-  )
+  # The stem separation pipeline is compiled into the binary (see the res/stems
+  # entries in res/mixxx.qrc), so an installation is the application alone and
+  # there is nothing to install for it. The scripts are written out beside the
+  # interpreter environment the first time they are needed.
 
   # Translation files
   install(
@@ -2924,6 +2919,7 @@ if(STEM)
       src/stems/stemseparationjob.cpp
       src/stems/stemprovisionjob.cpp
       src/stems/stempreparationjob.cpp
+      src/stems/stemscripts.cpp
       src/track/steminfoimporter.cpp
       src/track/steminfo.cpp
       src/widget/wtrackstemmenu.cpp

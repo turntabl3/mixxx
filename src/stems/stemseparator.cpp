@@ -1,4 +1,5 @@
 #include "stems/stemseparator.h"
+#include "stems/stemscripts.h"
 
 #include <QDir>
 #include <QFileInfo>
@@ -61,6 +62,16 @@ bool StemSeparator::separate(const QString& trackPath,
         *pError = QStringLiteral("separation interpreter not found: %1")
                           .arg(m_settings.pythonPath);
         return false;
+    }
+    if (!QFileInfo::exists(m_settings.scriptPath)) {
+        // The pipeline is compiled into the binary rather than shipped as
+        // files, so write it out where the settings say the script lives and
+        // look again. This is what makes an installation of Mixxx alone enough
+        // to separate a track.
+        if (!stemscripts::materialize(
+                    QFileInfo(m_settings.scriptPath).absolutePath(), pError)) {
+            return false;
+        }
     }
     if (!QFileInfo::exists(m_settings.scriptPath)) {
         *pError = QStringLiteral("separation script not found: %1")

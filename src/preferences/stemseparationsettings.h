@@ -6,6 +6,7 @@
 #include <QFileInfo>
 
 #include "preferences/usersettings.h"
+#include "stems/stemscripts.h"
 #include "util/logger.h"
 
 #define STEM_SEPARATION_CONFIG_KEY "[StemSeparation]"
@@ -71,8 +72,12 @@ class StemSeparationSettings {
     }
 
     QString getScriptPathDefault() const {
-        return QDir(m_pConfig->getResourcePath())
-                .filePath(QStringLiteral("stems/separate.py"));
+        // The script is compiled into the binary and written out beside the
+        // interpreter environment the first time it is needed, so the default
+        // lives in Mixxx's own directory rather than in a resource directory
+        // that may not exist or may hold a stale copy.
+        return QDir(getEnvironmentDir())
+                .filePath(mixxx::stemscripts::separationScriptName());
     }
 
     void setScriptPathToDefault() {
@@ -99,14 +104,14 @@ class StemSeparationSettings {
             STEM_SEPARATION_OUTPUT_DIR,
             QString());
 
-    // True when the backend is enabled and both paths exist. The paths have
-    // defaults now, so it is existence that matters rather than emptiness: a
-    // fresh installation has usable paths but no environment behind them yet,
-    // and callers use this to avoid offering a job that can only fail.
+    // True when the backend is enabled and its interpreter exists. The script
+    // is compiled into the binary, so unlike a shipped file it cannot go
+    // missing; the interpreter is the part that has to be present on this
+    // machine. Callers use this to avoid offering a job that can only fail. A
+    // path the user pointed somewhere else on purpose is not checked here; the
+    // separator itself reports that by name.
     bool isConfigured() const {
-        return getEnabled() &&
-                QFileInfo::exists(getPythonPath()) &&
-                QFileInfo::exists(getScriptPath());
+        return getEnabled() && QFileInfo::exists(getPythonPath());
     }
 
     // Directory holding the environment and anything else the backend needs.
@@ -116,11 +121,12 @@ class StemSeparationSettings {
                 .filePath(QStringLiteral("stems"));
     }
 
-    // Path of the script that creates the environment, resolved against
-    // Mixxx's bundled resources next to the separation script itself.
+    // Path of the script that creates the environment. Compiled into the
+    // binary like the separation script, and written out beside it before a
+    // provisioning run.
     QString getProvisionScriptPath() const {
-        return QDir(m_pConfig->getResourcePath())
-                .filePath(QStringLiteral("stems/provision.py"));
+        return QDir(getEnvironmentDir())
+                .filePath(mixxx::stemscripts::provisionScriptName());
     }
 
   private:

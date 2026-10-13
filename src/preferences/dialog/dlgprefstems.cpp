@@ -1,6 +1,7 @@
 #include "preferences/dialog/dlgprefstems.h"
 
 #include <QComboBox>
+#include <QDebug>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -10,6 +11,7 @@
 #include <QThread>
 
 #include "stems/stemprovisionjob.h"
+#include "stems/stemscripts.h"
 
 #include "moc_dlgprefstems.cpp"
 
@@ -84,6 +86,18 @@ DlgPrefStems::DlgPrefStems(QWidget* parent, UserSettingsPointer pConfig)
             &DlgPrefStems::slotInstallEnvironment);
 
     setScrollSafeGuardForAllInputWidgets(this);
+
+    // The separation script is compiled into the binary rather than shipped as
+    // a file, so write it out before the page reports on it. Without this the
+    // page would call a working installation unconfigured, because the path it
+    // shows would not exist until something tried to separate a track.
+    QString scriptError;
+    if (!mixxx::stemscripts::materialize(
+                QFileInfo(m_settings.getScriptPath()).absolutePath(),
+                &scriptError)) {
+        qWarning() << "stems: could not write the separation scripts:"
+                   << scriptError;
+    }
 
     slotUpdate();
 }

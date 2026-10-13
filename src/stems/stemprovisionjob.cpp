@@ -1,5 +1,7 @@
 #include "stems/stemprovisionjob.h"
 
+#include "stems/stemscripts.h"
+
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFileInfo>
@@ -48,6 +50,16 @@ void StemProvisionJob::run() {
         emit failed(QObject::tr(
                 "The separation environment cannot be installed because the "
                 "installer is not configured."));
+        return;
+    }
+    // The installer is compiled into the binary, so write it out beside the
+    // environment it is about to create rather than requiring it to be shipped
+    // as a file.
+    QString reason;
+    if (!stemscripts::materialize(
+                QFileInfo(m_provisionScript).absolutePath(), &reason)) {
+        emit failed(QObject::tr("Could not write the installer: %1")
+                            .arg(reason));
         return;
     }
     if (!QFileInfo::exists(m_provisionScript)) {

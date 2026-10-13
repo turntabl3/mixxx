@@ -102,6 +102,14 @@
         <file>images/ic_magnifier.svg</file>
       <!-- skin oversize warning -->
         <file>images/preferences/ic_preferences_warning.svg</file>
+        <!-- Stem separation pipeline, run by an external interpreter rather
+             than linked in. Compiled in rather than shipped as loose files so
+             that an installation is the application alone; the files are
+             written out next to the environment that runs them (see
+             src/stems/stemscripts.cpp). -->
+        <file>stems/separate.py</file>
+        <file>stems/stemmp4.py</file>
+        <file>stems/provision.py</file>
         <file>schema.xml</file>
         <file>shaders/filteredsignal.frag</file>
         <file>shaders/passthrough.vert</file>
