@@ -59,11 +59,12 @@ class WTrackMenu : public QMenu {
         SelectInLibrary = 1 << 15,
         Analyze = 1 << 16,
         FindOnWeb = 1 << 17,
+        Stems = 1 << 18,
         TrackModelFeatures = Remove | HideUnhidePurge,
         All = AutoDJ | LoadTo | Playlist | Crate | Remove | Metadata | Reset | Analyze |
                 BPM | Color | HideUnhidePurge | RemoveFromDisk | FileBrowser |
                 Properties | SearchRelated | UpdateReplayGainFromPregain | SelectInLibrary |
-                FindOnWeb
+                FindOnWeb | Stems
     };
     Q_DECLARE_FLAGS(Features, Feature)
 
@@ -135,6 +136,11 @@ class WTrackMenu : public QMenu {
     // File
     void slotOpenInFileBrowser();
     void slotSelectInLibrary();
+
+#ifdef __STEM__
+    // Stems
+    void slotSeparateStems();
+#endif
 
     // Track rating
     void slotSetRating(int rating);
@@ -333,6 +339,11 @@ class WTrackMenu : public QMenu {
 
     // Open file in default file browser
     parented_ptr<QAction> m_pFileBrowserAct;
+
+#ifdef __STEM__
+    // Split the track into stems using the external separation backend
+    parented_ptr<QAction> m_pSeparateStemsAct;
+#endif
 
     // Select track in library
     parented_ptr<QAction> m_pSelectInLibraryAct;

@@ -1,11 +1,16 @@
 #include "widget/wtrackmenu.h"
 
+#include <QApplication>
 #include <QCheckBox>
 #include <QDialogButtonBox>
+#include <QDir>
+#include <QFileInfo>
 #include <QInputDialog>
 #include <QList>
 #include <QListWidget>
+#include <QMessageBox>
 #include <QModelIndex>
+#include <QProgressDialog>
 #include <QVBoxLayout>
 
 #include "analyzer/analyzerscheduledtrack.h"
@@ -53,6 +58,8 @@
 #include "widget/wstarrating.h"
 #include "widget/wstarratingaction.h"
 #ifdef __STEM__
+#include "preferences/stemseparationsettings.h"
+#include "stems/stemseparationjob.h"
 #include "widget/wtrackstemmenu.h"
 #endif
 
@@ -396,6 +403,17 @@ void WTrackMenu::createActions() {
         m_pFileBrowserAct = make_parented<QAction>(tr("Open in File Browser"), this);
         connect(m_pFileBrowserAct, &QAction::triggered, this, &WTrackMenu::slotOpenInFileBrowser);
     }
+
+#ifdef __STEM__
+    if (featureIsEnabled(Feature::Stems)) {
+        m_pSeparateStemsAct = make_parented<QAction>(tr("Separate stems…"), this);
+        m_pSeparateStemsAct->setToolTip(tr("Split the track into drums, bass, "
+                                           "other and vocals in the background. "
+                                           "Set up the separation program in "
+                                           "Preferences > Stems first."));
+        connect(m_pSeparateStemsAct, &QAction::triggered, this, &WTrackMenu::slotSeparateStems);
+    }
+#endif
 
     if (featureIsEnabled(Feature::SelectInLibrary)) {
         m_pSelectInLibraryAct = make_parented<QAction>(tr("Select in Library"), this);
@@ -802,6 +820,13 @@ void WTrackMenu::setupActions() {
     if (featureIsEnabled(Feature::FileBrowser)) {
         addAction(m_pFileBrowserAct);
     }
+
+#ifdef __STEM__
+    if (featureIsEnabled(Feature::Stems)) {
+        addSeparator();
+        addAction(m_pSeparateStemsAct);
+    }
+#endif
 
     if (featureIsEnabled(Feature::Properties)) {
         addSeparator();
@@ -1255,6 +1280,16 @@ void WTrackMenu::updateMenus() {
         m_pPropertiesAct->setEnabled(true);
     }
 
+#ifdef __STEM__
+    if (featureIsEnabled(Feature::Stems)) {
+        const StemSeparationSettings stemSeparationSettings(m_pConfig);
+        // Separation is per file and takes minutes, so only offer it for a
+        // single selection, and only once the backend is actually configured.
+        m_pSeparateStemsAct->setEnabled(
+                getTrackCount() == 1 && stemSeparationSettings.isConfigured());
+    }
+#endif
+
     if (featureIsEnabled(Feature::FindOnWeb)) {
         m_pFindOnWebMenu->clear();
         m_pFindOnWebLastAct->setVisible(false);
@@ -1447,6 +1482,75 @@ void WTrackMenu::slotOpenInFileBrowser() {
     }
     mixxx::DesktopHelper::openInFileBrowser(locations);
 }
+
+#ifdef __STEM__
+void WTrackMenu::slotSeparateStems() {
+    const auto trackRefs = getTrackRefs();
+    if (trackRefs.size() != 1) {
+        return;
+    }
+    const TrackRef& trackRef = trackRefs.first();
+
+    const StemSeparationSettings stemSeparationSettings(m_pConfig);
+    mixxx::StemSeparator::Settings settings;
+    settings.pythonPath = stemSeparationSettings.getPythonPath();
+    settings.scriptPath = stemSeparationSettings.getScriptPath();
+    settings.model = stemSeparationSettings.getModel();
+    settings.outputDir = stemSeparationSettings.getOutputDir();
+
+    if (!settings.outputDir.isEmpty()) {
+        // No point starting a job whose output directory cannot be created.
+        if (!QDir().mkpath(settings.outputDir)) {
+            QMessageBox::warning(nullptr,
+                    tr("Stem Separation Failed"),
+                    tr("Cannot create %1").arg(settings.outputDir));
+            return;
+        }
+    }
+
+    // Separation runs for minutes, so it goes on a worker thread behind a
+    // progress dialog instead of blocking here. There is no cancel button: the
+    // backend runs as a child process with no cancellation support, and a
+    // button that does nothing is worse than none.
+    auto* pProgressDlg = new QProgressDialog(
+            tr("Separating stems for \"%1\"…")
+                    .arg(QFileInfo(trackRef.getLocation()).fileName()),
+            QString(),
+            0,
+            0,
+            parentWidget() != nullptr ? parentWidget()->window() : nullptr);
+    pProgressDlg->setWindowTitle(tr("Separating Stems"));
+    pProgressDlg->setCancelButton(nullptr);
+    pProgressDlg->setMinimumDuration(0);
+    pProgressDlg->setWindowModality(Qt::WindowModal);
+    pProgressDlg->show();
+
+    auto* pJob = new mixxx::StemSeparationJob(nullptr, trackRef.getLocation(), settings);
+    connect(pJob,
+            &mixxx::StemSeparationJob::completed,
+            pProgressDlg,
+            [pProgressDlg](const QString&, const QString& outputPath) {
+                pProgressDlg->close();
+                QMessageBox::information(nullptr,
+                        tr("Stems Separated"),
+                        tr("Wrote\n%1\n\nMixxx does not load it automatically "
+                           "yet: add it to the library as a normal track.")
+                                .arg(outputPath));
+            });
+    connect(pJob,
+            &mixxx::StemSeparationJob::failed,
+            pProgressDlg,
+            [pProgressDlg](const QString&, const QString& message) {
+                pProgressDlg->close();
+                QMessageBox::warning(nullptr, tr("Stem Separation Failed"), message);
+            });
+    // The dialog outlives the job's signals, so delete it with the job and let
+    // the job delete itself; the menu is short lived and must own neither.
+    connect(pJob, &QThread::finished, pProgressDlg, &QObject::deleteLater);
+    connect(pJob, &QThread::finished, pJob, &QObject::deleteLater);
+    pJob->start();
+}
+#endif
 
 void WTrackMenu::slotSelectInLibrary() {
     if (m_pTrack) {
