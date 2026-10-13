@@ -90,23 +90,27 @@ yet.
 Done:
 
 - `tools/stems/` produces a container Mixxx loads.
-- `mixxx::StemSeparator` runs that pipeline and validates the result.
+- `mixxx::StemSeparator` runs that pipeline and validates the result, and
+  passes the configured model through.
 - `StemSeparationSettings` holds interpreter, script, model and output path.
+- A preference page (Preferences > Stems) exposes them, with the paths checked
+  as you type rather than only when a separation fails.
 
 Still to do:
 
-1. A preference page (Preferences > Stems) exposing those settings.
-2. A job that runs `StemSeparator` on a worker thread when the user asks for a
+1. A job that runs `StemSeparator` on a worker thread when the user asks for a
    track. It must not touch the engine thread; the deck keeps playing the
    original file while separation runs.
-3. Making the deck load the container. Once a container exists for the loaded
+2. Making the deck load the container. Once a container exists for the loaded
    track it has to be opened instead of the original file, so that
    `SoundSourceSTEM` hands the deck four stereo pairs and the existing per-stem
    controls appear. This needs a track -> container mapping: either a field on
    the track record, or a deterministic cache path derived from the track
    location. A deterministic path is preferable -- it leaves the library
    untouched and the original file is never replaced.
-4. Waveform. Per-stem waveform rows come from `analyzerwaveform`, which derives
+3. Waveform. Per-stem waveform rows come from `analyzerwaveform`, which derives
    the stem count from the channel count. The container therefore has to be
    analysed, not the original, or the waveform shows a single row.
+4. A UI trigger. Nothing in the app invokes a separation yet, so today you run
+   `separate.py` by hand and load the result as an ordinary library track.
 

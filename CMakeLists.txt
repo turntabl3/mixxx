@@ -1592,6 +1592,8 @@ add_library(
   src/preferences/dialog/dlgprefsounddlg.ui
   src/preferences/dialog/dlgprefsounditem.cpp
   src/preferences/dialog/dlgprefsounditem.ui
+  src/preferences/dialog/dlgprefstems.cpp
+  src/preferences/dialog/dlgprefstemsdlg.ui
   src/preferences/dialog/dlgprefvinyldlg.ui
   src/preferences/dialog/dlgprefwaveform.cpp
   src/preferences/dialog/dlgprefwaveformdlg.ui

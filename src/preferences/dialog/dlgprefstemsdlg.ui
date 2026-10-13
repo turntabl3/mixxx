@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DlgPrefStemsDlg</class>
+ <widget class="QWidget" name="DlgPrefStemsDlg">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>640</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Stem Separation Preferences</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+
+   <item row="0" column="0" colspan="3">
+    <widget class="QCheckBox" name="checkBoxEnabled">
+     <property name="toolTip">
+      <string>When enabled, a &quot;Separate stems&quot; action is offered for tracks in the library.</string>
+     </property>
+     <property name="text">
+      <string>Enable stem separation</string>
+     </property>
+    </widget>
+   </item>
+
+   <item row="1" column="0">
+    <widget class="QLabel" name="labelPython">
+     <property name="text">
+      <string>Separation program</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLineEdit" name="lineEditPythonPath">
+     <property name="toolTip">
+      <string>Python interpreter with demucs installed, for example ~/.venvs/stems/bin/python.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="QPushButton" name="pushButtonBrowsePython">
+     <property name="text">
+      <string>Browse…</string>
+     </property>
+    </widget>
+   </item>
+
+   <item row="2" column="0">
+    <widget class="QLabel" name="labelScript">
+     <property name="text">
+      <string>Separation script</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLineEdit" name="lineEditScriptPath">
+     <property name="toolTip">
+      <string>Path to tools/stems/separate.py inside the Mixxx source tree.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QPushButton" name="pushButtonBrowseScript">
+     <property name="text">
+      <string>Browse…</string>
+     </property>
+    </widget>
+   </item>
+
+   <item row="3" column="0">
+    <widget class="QLabel" name="labelModel">
+     <property name="text">
+      <string>Separation model</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" colspan="2">
+    <widget class="QComboBox" name="comboBoxModel">
+     <property name="toolTip">
+      <string>Only four-stem models can be used, because Mixxx supports four stems.</string>
+     </property>
+     <property name="editable">
+      <bool>true</bool>
+     </property>
+     <item>
+      <property name="text">
+       <string>htdemucs</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>htdemucs_ft</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+
+   <item row="4" column="0">
+    <widget class="QLabel" name="labelOutputDir">
+     <property name="text">
+      <string>Store separated stems in</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLineEdit" name="lineEditOutputDir">
+     <property name="toolTip">
+      <string>Leave empty to store each separated track beside its source file.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2">
+    <widget class="QPushButton" name="pushButtonBrowseOutputDir">
+     <property name="text">
+      <string>Browse…</string>
+     </property>
+    </widget>
+   </item>
+
+   <item row="5" column="0" colspan="3">
+    <widget class="QLabel" name="labelStatus">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+
+   <item row="6" column="0" colspan="3">
+    <spacer>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>checkBoxEnabled</tabstop>
+  <tabstop>lineEditPythonPath</tabstop>
+  <tabstop>pushButtonBrowsePython</tabstop>
+  <tabstop>lineEditScriptPath</tabstop>
+  <tabstop>pushButtonBrowseScript</tabstop>
+  <tabstop>comboBoxModel</tabstop>
+  <tabstop>lineEditOutputDir</tabstop>
+  <tabstop>pushButtonBrowseOutputDir</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
