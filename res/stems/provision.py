@@ -28,7 +28,21 @@ import venv
 # this index has no wheel for the platform we fall back to plain PyPI, where
 # the aarch64 wheels are CPU builds anyway.
 TORCH_CPU_INDEX = 'https://download.pytorch.org/whl/cpu'
-PACKAGES = ('demucs', 'soundfile')
+
+# Both versions are pinned, and both pins are load-bearing. What matters is that
+# installing them needs nothing but pip: no compiler, no Rust, no CUDA.
+#
+# torchaudio 2.9 and later dropped their own audio decoders: torchaudio.load now
+# goes through TorchCodec, which has to find FFmpeg's shared libraries at
+# runtime. demucs 4.0.1 loads tracks with torchaudio.load, so the last pair that
+# decodes audio by itself is the one to use.
+TORCH_VERSION = '2.6.0'
+# demucs 4.1.0 needs sphn, which publishes wheels only for macOS arm64, Linux
+# x86-64 and Windows x64. On arm64 Linux and arm64 Windows pip would build it
+# from source and fail without a Rust toolchain, which is not something to
+# require of a machine that is only trying to separate a track. 4.0.1 depends on
+# nothing compiled beyond PyTorch itself.
+PACKAGES = ('demucs==4.0.1', 'soundfile')
 
 
 def interpreter(venv_dir):
@@ -49,11 +63,13 @@ def pip(python, *args):
 
 
 def install_torch(python):
-    cpu_index = pip(python, 'torch', 'torchaudio', '--index-url', TORCH_CPU_INDEX)
+    torch_pin = 'torch==' + TORCH_VERSION
+    audio_pin = 'torchaudio==' + TORCH_VERSION
+    cpu_index = pip(python, torch_pin, audio_pin, '--index-url', TORCH_CPU_INDEX)
     if cpu_index == 0:
         return
     print('CPU index failed, retrying from PyPI', flush=True)
-    if pip(python, 'torch', 'torchaudio') != 0:
+    if pip(python, torch_pin, audio_pin) != 0:
         raise SystemExit('could not install torch/torchaudio')
 
 
@@ -75,12 +91,15 @@ def main(argv):
                     'On Debian/Ubuntu this usually means the python3-venv '
                     'package is missing.' % e)
 
-    # Separation reads and writes audio through ffmpeg, which demucs finds on
-    # PATH; nothing to install for it, but say so clearly when it is absent,
-    # because the failure is otherwise reported much later and looks unrelated.
+    # ffmpeg is a real requirement, not a nicety: the muxer that writes the
+    # .stem.mp4 container is itself an ffmpeg command, and demucs reads some
+    # formats through it. It is not something pip can install, so say so now --
+    # otherwise the failure surfaces minutes later, at the end of a separation,
+    # looking unrelated to anything the user did.
     if shutil.which('ffmpeg') is None:
-        print('warning: ffmpeg is not on PATH; separation will fail',
-                flush=True)
+        print('warning: ffmpeg is not on PATH. Stem separation needs it: the '
+              'container is written by an ffmpeg command. Install ffmpeg (any '
+              'recent build) and make sure it is on PATH.', flush=True)
 
     install_torch(python)
     if pip(python, *PACKAGES) != 0:

@@ -40,7 +40,25 @@ chunk offsets pointing into `mdat`.
 
 ## Setup
 
-demucs is not a Mixxx build dependency, so keep it in its own environment:
+Nothing to install by hand. Preferences > Stems has an "Install separation
+environment" button; it creates an environment under Mixxx's settings directory
+(`<settings>/stems/venv`) and installs PyTorch and demucs into it.
+
+PyTorch is a few hundred megabytes, so it is not shipped with the application,
+and this is a one-off download. If the machine has no Python at all -- the
+normal state of a Windows install -- the application fetches a stand-alone
+CPython build into its own directory first, using curl (or wget) and tar, which
+both platforms already have. Nothing is installed system-wide and no
+administrator rights are needed.
+
+`stemmp4.py`, `separate.py` and `provision.py` are compiled into the executable
+rather than shipped as files, so an installation is the application alone.
+Copies are written out beside the environment when they are needed.
+
+The CPU index matters: the default PyPI wheels pull the CUDA stack, several GB
+of no use on a machine without an NVIDIA GPU.
+
+To build an environment by hand instead, for debugging:
 
 ```sh
 python3 -m venv ~/.venvs/stems
@@ -48,18 +66,24 @@ python3 -m venv ~/.venvs/stems
 ~/.venvs/stems/bin/pip install demucs numpy soundfile
 ```
 
-`--index-url .../whl/cpu` matters: the default index pulls the CUDA stack, which
-is several GB of no use on a machine without an NVIDIA GPU.
-
 ## Usage
 
+Through the application:
+
+- Right-click a track > Separate stems, for a single track.
+- Library > Prepare Stems for Library, for every track that does not have stems
+  yet. Once a track's container is written, its original is moved to the trash
+  so the container takes its place; the cover art is carried over.
+
+The scripts are written out beside the environment, so the same thing by hand is:
+
 ```sh
-<environment>/venv/bin/python separate.py /path/to/track.flac
+<settings>/stems/venv/bin/python <settings>/stems/separate.py /path/to/track.flac
 # -> /path/to/track.stem.mp4
 ```
 
-Load the result in Mixxx and the stem controls appear as for any NI Stems file:
-per-stem gain, mute, quick effects, per-stem waveform rows.
+Either way the stem controls then appear as for any NI Stems file: per-stem
+gain, mute, quick effects, per-stem waveform rows.
 
 `demucs` weights are MIT licensed (`htdemucs`), so they are usable here. Check
 the licence before substituting a different separation model -- several
@@ -84,35 +108,35 @@ references it but never calls it on this path).
 
 ## Status
 
-The pipeline and the pieces that drive it are in place; Mixxx does not call it
-yet.
+Working end to end: the pipeline produces a container Mixxx loads, the
+application provisions the environment it needs, and both the per-track and
+library-wide actions drive it.
 
 Done:
 
-- `res/stems/` produces a container Mixxx loads, and ships with the app.
-- `mixxx::StemSeparator` runs that pipeline and validates the result, and
-  passes the configured model through.
-- `StemSeparationSettings` holds interpreter, script, model and output path.
-- A preference page (Preferences > Stems) exposes them, with the paths checked
-  as you type rather than only when a separation fails.
-- `mixxx::StemSeparationJob` runs a separation on a worker thread.
-- "Separate stems…" in the track menu, enabled for a single track once the
-  backend is configured. It reports where the container was written.
+- `separate.py` / `stemmp4.py` produce a container Mixxx loads, carrying the
+  source's cover art.
+- The scripts are compiled into the executable; nothing is installed as a loose
+  file, and `res/stems` is no longer part of the install.
+- `mixxx::StemSeparator` runs the pipeline, validates the result and names the
+  offending path when something is missing.
+- `StemSeparationSettings` holds interpreter, script, model and output path, and
+  falls back to the bundled defaults when a stored path has gone missing.
+- A preference page (Preferences > Stems) exposes them, installs the
+  environment, and checks the paths as you type.
+- `mixxx::StemSeparationJob` separates one track on a worker thread.
+- "Separate stems" in the track menu.
+- "Prepare Stems for Library" in the Library menu: finds every track with no
+  container, separates them one at a time with progress and a stop button, and
+  moves each original to the trash once its container is written.
+- `mixxx::StemProvisionJob` installs the environment, fetching a stand-alone
+  Python when the machine has none.
 
-Still to do:
+Known limits:
 
-1. Making the deck load the container. Once a container exists for the loaded
-   track it has to be opened instead of the original file, so that
-   `SoundSourceSTEM` hands the deck four stereo pairs and the existing per-stem
-   controls appear. This needs a track -> container mapping: either a field on
-   the track record, or a deterministic cache path derived from the track
-   location. A deterministic path is preferable -- it leaves the library
-   untouched and the original file is never replaced. Until then, add the
-   container to the library by hand and load it as a normal track.
-2. Waveform. Per-stem waveform rows come from `analyzerwaveform`, which derives
-   the stem count from the channel count. The container therefore has to be
-   analysed, not the original, or the waveform shows a single row.
-3. Progress and cancellation. The dialog is a busy indicator with no cancel
-   button, because the backend runs as a child process with no cancellation
-   support. A real progress bar would mean parsing demucs' own output.
-
+1. Stopping a library-wide run takes effect between tracks. A separation in
+   progress cannot be interrupted: the backend is a child process with no
+   cancellation support.
+2. Progress is a per-track count, not a percentage within a track.
+3. The library needs a rescan after a library-wide run, because the files it
+   points at have been replaced. The summary says so.

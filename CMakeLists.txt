@@ -2920,6 +2920,7 @@ if(STEM)
       src/stems/stemprovisionjob.cpp
       src/stems/stempreparationjob.cpp
       src/stems/stemscripts.cpp
+      src/stems/stempython.cpp
       src/track/steminfoimporter.cpp
       src/track/steminfo.cpp
       src/widget/wtrackstemmenu.cpp
