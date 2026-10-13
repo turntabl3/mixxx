@@ -83,6 +83,12 @@ bool StemSeparator::separate(const QString& trackPath,
                 QFileInfo(trackPath).completeBaseName() + QStringLiteral(".stem.mp4"));
         args.append(outPath);
     }
+    if (!m_settings.model.isEmpty()) {
+        // separate.py takes --model so the position of the output path does not
+        // depend on whether a model was configured.
+        args.append(QStringLiteral("--model"));
+        args.append(m_settings.model);
+    }
 
     QProcess process;
     process.setProcessChannelMode(QProcess::SeparateChannels);

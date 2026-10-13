@@ -21,6 +21,10 @@ class StemSeparator {
         QString scriptPath;
         /// Directory for the produced container. Empty means "beside the track".
         QString outputDir;
+        /// Separation model, e.g. "htdemucs". Only four-stem models are usable
+        /// because Mixxx supports at most kMaxSupportedStems stems. Empty means
+        /// the backend's own default.
+        QString model;
         /// Give up after this long. Model load plus separation of a ten minute
         /// track is minutes, not seconds, even on a fast CPU.
         int timeoutMillis = 45 * 60 * 1000;
